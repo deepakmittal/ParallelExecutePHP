@@ -9,11 +9,20 @@ class ParallelExecutor{
     private $jobs = array();
     private $commands = array();
     private $isVerbose = false;
+    private $maxParallelJobs = 10;
     
     static function getLOCAL_TEMPORARY_FOLDER() {
         return self::$LOCAL_TEMPORARY_FOLDER;
     }
     
+    function getMaxParallelJobs() {
+        return $this->maxParallelJobs;
+    }
+
+    function setMaxParallelJobs($maxParallelJobs) {
+        $this->maxParallelJobs = $maxParallelJobs;
+    }
+
     function __construct() {
             $this->jobsGroupId = $this->generateRandomString();
             
@@ -70,6 +79,15 @@ class ParallelExecutor{
         rmdir(self::$LOCAL_TEMPORARY_FOLDER . "/phpParallelExecute/{$this->jobsGroupId}");
         $this->show("\n\nall jobs executed successfully.\n");
     }
+    public function getParallelRunningCount(){
+        $count = 0;
+        foreach($this->jobs as $job){
+            if($this->isProcessRunning($job['process_id'])){
+                $count ++;
+            }
+        }
+        return $count;
+    }
     public function isRunning(){
         foreach($this->jobs as $job){
             if($this->isProcessRunning($job['process_id'])){
@@ -87,6 +105,12 @@ class ParallelExecutor{
         }
     }   
     private function runCommand($cmd){
+        $waitingTime = 0;
+        while($this->getParallelRunningCount() >= $this->maxParallelJobs){
+            $this->show("waiting for slot. {$this->maxParallelJobs} jobs already active." ) ;
+            sleep(20);
+            $waitingTime += 20;
+        }
         $this->show("command: $cmd");
         $jobId = $this->generateRandomString();
         $path = self::$LOCAL_TEMPORARY_FOLDER . "/phpParallelExecute";
