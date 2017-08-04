@@ -74,10 +74,11 @@ class ParallelExecutor{
             unlink($job['output_file']);
             //rmdir($job['dir']);
             unset($job['output_file']);
-            unset($job['dir']);
+	    if(is_dir($job['dir']))	
+            	unset($job['dir']);
         }
 	$jobsPath = self::$LOCAL_TEMPORARY_FOLDER . "/phpParallelExecute/{$this->jobsGroupId}";
-	if(!is_dir($jobsPath)){
+	if(is_dir($jobsPath)){
 		rmdir($jobsPath);
 	}	
         $this->show("\n\nall jobs executed successfully.\n");
